@@ -10,12 +10,9 @@ import types
 import unittest
 from nose.pyversion import ClassType, TypeType
 
-try:
-    from compiler.consts import CO_GENERATOR
-except ImportError:
-    # IronPython doesn't have a complier module
-    CO_GENERATOR=0x20
-    
+
+CO_GENERATOR=0x20
+
 log = logging.getLogger('nose')
 
 ident_re = re.compile(r'^[A-Za-z_][A-Za-z0-9_.]*$')

@@ -19,9 +19,9 @@ with the switch ``--doctest_fixtures=_fixt`` will load fixtures from the module
 A fixtures module may define any or all of the following functions:
 
 * setup([module]) or setup_module([module])
-   
+
   Called before the test runs. You may raise SkipTest to skip all tests.
-  
+
 * teardown([module]) or teardown_module([module])
 
   Called after the test runs, if setup/setup_module did not raise an
@@ -31,12 +31,12 @@ A fixtures module may define any or all of the following functions:
 
   Called before the test. NOTE: the argument passed is a
   doctest.DocTest instance, *not* a unittest.TestCase.
-  
+
 * teardown_test(test)
- 
+
   Called after the test, if setup_test did not raise an exception. NOTE: the
   argument passed is a doctest.DocTest instance, *not* a unittest.TestCase.
-  
+
 Doctests are run like any other test, with the exception that output
 capture does not work; doctest does its own output capture while running a
 test.
@@ -96,11 +96,11 @@ class NoseOutputRedirectingPdb(_orp):
         _orp.set_trace(self, sys._getframe().f_back)
 
     def set_continue(self):
-        # Calling set_continue unconditionally would break unit test 
+        # Calling set_continue unconditionally would break unit test
         # coverage reporting, as Bdb.set_continue calls sys.settrace(None).
         if self.__debugger_used:
             _orp.set_continue(self)
-doctest._OutputRedirectingPdb = NoseOutputRedirectingPdb    
+doctest._OutputRedirectingPdb = NoseOutputRedirectingPdb
 
 
 class DoctestSuite(unittest.TestSuite):
@@ -112,10 +112,10 @@ class DoctestSuite(unittest.TestSuite):
 
     This class is used only if the plugin is not fully prepared;
     in normal use, the loader's suiteClass is used.
-    
+
     """
     can_split = False
-    
+
     def __init__(self, tests=(), context=None, can_split=False):
         self.context = context
         self.can_split = can_split
@@ -131,14 +131,14 @@ class DoctestSuite(unittest.TestSuite):
     def __str__(self):
         return str(self._tests)
 
-        
+
 class Doctest(Plugin):
     """
     Activate doctest plugin to find and run doctests in non-test modules.
     """
     extension = None
     suiteClass = DoctestSuite
-    
+
     def options(self, parser, env):
         """Register commmandline options.
         """
@@ -212,7 +212,7 @@ class Doctest(Plugin):
         """Capture loader's suiteClass.
 
         This is used to create test suites from doctest files.
-        
+
         """
         self.suiteClass = loader.suiteClass
 
@@ -248,7 +248,7 @@ class Doctest(Plugin):
                                      result_var=self.doctest_result_var))
         if cases:
             yield self.suiteClass(cases, context=module, can_split=False)
-            
+
     def loadTestsFromFile(self, filename):
         """Load doctests from the file.
 
@@ -280,7 +280,7 @@ class Doctest(Plugin):
                 log.debug("Fixture module %s resolved to %s",
                           fixt_mod, fixture_context)
                 if hasattr(fixture_context, 'globs'):
-                    globs = fixture_context.globs(globs)                    
+                    globs = fixture_context.globs(globs)
             parser = doctest.DocTestParser()
             test = parser.get_doctest(
                 doc, globs=globs, name=name,
@@ -298,7 +298,7 @@ class Doctest(Plugin):
                     yield case
             else:
                 yield False # no tests to load
-            
+
     def makeTest(self, obj, parent):
         """Look for doctests in the given object, which will be a
         function, method or class.
@@ -311,7 +311,7 @@ class Doctest(Plugin):
                     continue
                 yield DocTestCase(test, obj=obj, optionflags=self.optionflags,
                                   result_var=self.doctest_result_var)
-    
+
     def matches(self, name):
         # FIXME this seems wrong -- nothing is ever going to
         # fail this test, since we're given a module NAME not FILE
@@ -319,29 +319,30 @@ class Doctest(Plugin):
             return False
         # FIXME don't think we need include/exclude checks here?
         return ((self.doctest_tests or not self.conf.testMatch.search(name)
-                 or (self.conf.include 
+                 or (self.conf.include
                      and filter(None,
                                 [inc.search(name)
                                  for inc in self.conf.include])))
-                and (not self.conf.exclude 
+                and (not self.conf.exclude
                      or not filter(None,
                                    [exc.search(name)
                                     for exc in self.conf.exclude])))
-    
+
     def wantFile(self, file):
         """Override to select all modules and any file ending with
         configured doctest extension.
         """
+        # exclude unwanted files
+        if self.conf.exclude and \
+                filter(None, [exc.search(file) for exc in self.conf.exclude]):
+            log.debug('%s matches exclude pattern; skipped', file)
+            return False
         # always want .py files
         if file.endswith('.py'):
             return True
         # also want files that match my extension
-        if (self.extension
-            and anyp(file.endswith, self.extension)
-            and (not self.conf.exclude
-                 or not filter(None, 
-                               [exc.search(file)
-                                for exc in self.conf.exclude]))):
+        if self.extension and \
+                anyp(file.endswith, self.extension):
             return True
         return None
 
@@ -360,7 +361,7 @@ class DocTestCase(doctest.DocTestCase):
         super(DocTestCase, self).__init__(
             test, optionflags=optionflags, setUp=setUp, tearDown=tearDown,
             checker=checker)
-    
+
     def address(self):
         if self._nose_obj is not None:
             return test_address(self._nose_obj)
@@ -378,7 +379,7 @@ class DocTestCase(doctest.DocTestCase):
                     '.'.join([base_addr[2], parts[-1]]))
         else:
             return test_address(obj)
-    
+
     # doctests loaded via find(obj) omit the module name
     # so we need to override id, __repr__ and shortDescription
     # bonus: this will squash a 2.3 vs 2.4 incompatiblity
@@ -390,7 +391,7 @@ class DocTestCase(doctest.DocTestCase):
             if not name.startswith(pk):
                 name = "%s.%s" % (pk, name)
         return name
-    
+
     def __repr__(self):
         name = self.id()
         name = name.split('.')
